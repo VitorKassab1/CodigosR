@@ -1,0 +1,142 @@
+mh1 = function(N,sigma){
+  x = matrix(NA,nrow = N)
+  x[1] = 0
+  taxa = 0
+  for(i in 2:N){
+    y = rnorm(1,x[i-1],sigma)
+    prob = min(1,exp(-0.5*((y^2 - x[i-1]^2)/4)))
+    u = runif(1)
+    if(u < prob){
+      x[i] = y
+      taxa = taxa + 1
+    }
+    else x[i] = x[i-1]
+  }
+  return(list(x=x,taxa=round(taxa/N,2)))
+}
+
+set.seed(181256576)
+metro1 = mh1(1000,1)
+
+set.seed(181256576)
+metro2 = mh1(1000,5)
+
+set.seed(181256576)
+metro3 = mh1(10000,1)
+
+set.seed(181256576)
+metro4 = mh1(10000,5)
+
+plot(metro1$x,type = "l",main = "Gráfico dos valores das cadeias ao longo das iterações de Y|x ~ N(x,1) com N = 1000",ylab
+     =expression(theta))
+
+plot(metro3$x,type = "l",main = "Gráfico dos valores das cadeias ao longo das iterações de Y|x ~ N(x,1) com N = 10000",ylab
+     =expression(theta))
+
+plot(metro2$x,type = "l",main = "Gráfico dos valores das cadeias ao longo das iterações de Y|x ~ N(x,5) com N = 1000",ylab
+     =expression(theta))
+
+plot(mmetro4$x,type = "l",main = "Gráfico dos valores das cadeias ao longo das iterações de Y|x ~ N(x,5) com N = 10000",ylab
+     =expression(theta))
+
+acf(metro1$x,main="Gráfico das autocorrelações de Y|x ~ N(x,1) com N = 1000")
+
+acf(metro3$x,main="Gráfico das autocorrelações de Y|x ~ N(x,1) com N = 10000")
+
+acf(metro2$x,main="Gráfico das autocorrelações de Y|x ~ N(x,5) com N = 1000")
+
+acf(metro4$x,main="Gráfico das autocorrelações de Y|x ~ N(x,5) com N = 10000")
+
+hist(metro1$x,prob=T,main="Histograma de Y|x ~ N(x,1) com N = 1000", col="gold")
+
+hist(metro3$x,prob=T,main="Histograma de Y|x ~ N(x,1) com N = 10000",col="gray")
+
+hist(metro2$x,prob=T,main="Histograma de Y|x ~ N(x,5) com N = 1000",col="purple") 
+
+hist(metro4$x,prob=T,main="Histograma de Y|x ~ N(x,5) com N = 10000",col="brown")
+
+metro1$taxa
+metro2$taxa
+metro3$taxa
+metro4$taxa
+
+
+
+##QUESTÃO 2
+mh2=function(N){
+  x=matrix(NA,nrow=N)
+  taxa=0
+  x[1]=1
+  for(i in 2:N){
+    y=rcauchy(1,x[i-1], 2)
+    prob=min(1,exp(-0.5*(y^2-x[i-1]^2))*(y/x[i-1]))
+    u=runif(1)
+    if(u<prob){
+      x[i]=y
+      taxa=taxa+1
+    }
+    else x[i]=x[i-1]
+  }
+  return(list(x=x,taxa=round(taxa/N,2)))}
+
+
+set.seed(181256576)
+cauchy1 = mh2(1000)
+
+
+set.seed(181256576)
+cauchy2 = mh2(10000)
+
+
+cauchy1$taxa
+cauchy2$taxa
+
+par(mfrow=c(2,1))
+plot(cauchy1$x,type = "l",main = "Gráfico dos valores das cadeias ao longo das iterações de Y|x~Cauchy(x,β) com N = 1000",ylab
+     =expression(theta))
+acf(cauchy1$x,main="Gráfico das autocorrelações de Y|x~Cauchy(x,β) com N = 1000")
+
+par(mfrow=c(2,1))
+plot(cauchy2$x,type = "l",main = "Gráfico dos valores das cadeias ao longo das iterações de Y|x~Cauchy(x,β) com N = 10000",ylab
+     =expression(theta))
+acf(cauchy2$x,main="Gráfico das autocorrelações de Y|x~Cauchy(x,β) com N = 10000")
+
+
+
+##QUESTÃO 3
+gibbs = function(N,rho){
+  mat = matrix(ncol = 2, nrow = N)
+  x = 0
+  y = 0
+  mat[1,] = c(x,y)
+  for(i in 2:N){
+    x = rnorm(1,rho * y, sqrt(1 - rho^2))
+    y = rnorm(1, rho * x, sqrt(1- rho^2))
+    mat[i,] = c(x,y) }
+  mat}
+
+set.seed(181256576)
+normalbi1 = gibbs(1000,0.60)
+
+set.seed(181256576)
+normalbi2 = gibbs(10000,0.60)
+
+par(mfrow=c(2,3))
+plot(normalbi1,col=1:10000,main = "valores gerados")
+plot(normalbi1,main = "valores gerados",type = "l")
+acf((normalbi1[,1]),main = "Autocorrelação de X")
+acf((normalbi1[,2]),main = "Autocorrelação de Y")
+
+par(mfrow=c(2,3))
+plot(normalbi2,col=1:10000,main = "valores gerados")
+plot(normalbi2,main = "valores gerados",type = "l")
+acf((normalbi2[,1]),main = "Autocorrelação de X")
+acf((normalbi2[,2]),main = "Autocorrelação de Y")
+
+hist(normalbi1[,1],prob=T,40,main="Histograma de X com N = 1000", col= "pink")
+
+hist(normalbi2[,1],prob=T,40,main="Histograma de X com N = 10000",col ="red")
+
+hist(normalbi1[,2],prob=T,40,main="Histograma de Y com N = 1000", col = "yellow")
+
+hist(normalbi2[,2],prob=T,40,main="Histograma de Y com N = 10000", col="darkblue")
