@@ -1,0 +1,393 @@
+library(read.dbc)
+library(tidyverse)
+library(stringr)
+library(dplyr)
+library(readr)
+library(PerformanceAnalytics)
+library(corrplot)
+library(Hmisc)
+library(writexl)
+library(caTools)
+library(ggplot2)
+dadosinf<-read.dbc('C:/Users/Matheus/Downloads/DOINF20.dbc')
+dadosfet<-read.dbc('C:/Users/Matheus/Downloads/DOFET20.dbc')
+
+doinf=dadosinf[,c("TIPOBITO","DTOBITO","CODMUNRES","ESTCIV","OCUPMAE","LOCOCOR","ESCMAE","IDADE","SEXO","RACACOR","IDADEMAE","QTDFILVIVO","QTDFILMORT","GRAVIDEZ","SEMAGESTAC","GESTACAO","PARTO","OBITOPARTO","PESO","ASSISTMED","CIRURGIA","CAUSABAS")]
+
+dofet=dadosfet[,c("TIPOBITO","DTOBITO","CODMUNRES","ESTCIV","OCUPMAE","LOCOCOR","ESCMAE","IDADE","SEXO","RACACOR","IDADEMAE","QTDFILVIVO","QTDFILMORT","GRAVIDEZ","SEMAGESTAC","GESTACAO","PARTO","OBITOPARTO","PESO","ASSISTMED","CIRURGIA","CAUSABAS")]
+
+
+#Verificação de NA para ambas as bases
+a = sum(is.na(dofet$IDADE))/nrow(dofet) ##
+b = sum(is.na(dofet$SEXO))/nrow(dofet)
+c = sum(is.na(dofet$RACACOR))/nrow(dofet) ##
+d = sum(is.na(dofet$IDADEMAE))/nrow(dofet)
+e = sum(is.na(dofet$QTDFILVIVO))/nrow(dofet)
+f = sum(is.na(dofet$QTDFILMORT))/nrow(dofet)
+g = sum(is.na(dofet$GRAVIDEZ))/nrow(dofet)
+h = sum(is.na(dofet$SEMAGESTAC))/nrow(dofet)
+i = sum(is.na(dofet$GESTACAO))/nrow(dofet)
+j = sum(is.na(dofet$PARTO))/nrow(dofet)
+k = sum(is.na(dofet$ASSISTMED))/nrow(dofet)
+l = sum(is.na(dofet$CIRURGIA))/nrow(dofet)  ##
+m = sum(is.na(dofet$OBITOPARTO))/nrow(dofet)
+n = sum(is.na(dofet$ESTCIV))/nrow(dofet)   ##
+o = sum(is.na(dofet$OCUPMAE))/nrow(dofet)
+p = sum(is.na(dofet$ESCMAE))/nrow(dofet)
+q = sum(is.na(dofet$LOCOCOR))/nrow(dofet)
+
+var_NA_fet = c(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q)
+var_NA_fet
+
+a = sum(is.na(doinf$IDADE))/nrow(doinf)
+b = sum(is.na(doinf$SEXO))/nrow(doinf)
+c = sum(is.na(doinf$RACACOR))/nrow(doinf)
+d = sum(is.na(doinf$IDADEMAE))/nrow(doinf)
+e = sum(is.na(doinf$QTDFILVIVO))/nrow(doinf)
+f = sum(is.na(doinf$QTDFILMORT))/nrow(doinf)
+g = sum(is.na(doinf$GRAVIDEZ))/nrow(doinf)
+h = sum(is.na(doinf$SEMAGESTAC))/nrow(doinf)
+i = sum(is.na(doinf$GESTACAO))/nrow(doinf)
+j = sum(is.na(doinf$PARTO))/nrow(doinf)
+k = sum(is.na(doinf$ASSISTMED))/nrow(doinf)
+l = sum(is.na(doinf$CIRURGIA))/nrow(doinf)  ##
+m = sum(is.na(doinf$OBITOPARTO))/nrow(doinf)
+n = sum(is.na(doinf$ESTCIV))/nrow(doinf) ##
+o = sum(is.na(doinf$OCUPMAE))/nrow(doinf)
+p = sum(is.na(doinf$ESCMAE))/nrow(doinf)
+q = sum(is.na(doinf$LOCOCOR))/nrow(doinf)
+
+var_NA_doinf = c(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q)
+var_NA_doinf
+
+#Redefinindo a variavel resposta
+doinf$TIPOBITO = 0 # Variavel dependente
+dofet$TIPOBITO = 1
+
+#AGREGANDO AS BASES
+dados<-bind_rows(dofet,doinf)
+dados<-dados[,-c(2,4,5,8,10,15,21)] #Variaveis "NA" para remover:  DTOBITO, ESTCIV, OCUPMAE, IDADE, RACACOR, SEMANAGEST, CIRURGIA
+dados$ID<-c(1:nrow(dados))
+
+#SALVAMOS A BASE PARA ARRUMAR NO ECEL
+#f.out <- 'C:/Users/Matheus/Desktop/DadosImp.csv'
+#write_csv(x = dados,path=f.out)
+
+#BASE ARRUMADA
+dados<-read.csv('C:/Users/Matheus/Desktop/DadosMort.csv', sep = ";")
+
+
+#TRANFORMAÇÃO DOS DADOS, QUE SÃO TODOS FACTORS
+
+#E possivel transformar os códigos de cada municipio (CODMUNRES) em suas respectivas 
+# regioes? NORTE, NORDESTE, CENTRO OESTE, SULDESTE E SUL.
+
+dados$CODMUNRES = as.numeric(substr(dados$CODMUNRES,1,2))
+dados$REGIAO  = case_when(between(dados$CODMUNRES,50,53) ~ "CO",
+                          between(dados$CODMUNRES,41,43) ~ "SUL",
+                          between(dados$CODMUNRES,31,35) ~ "SUD",
+                          between(dados$CODMUNRES,21,29) ~ "NORD",
+                          between(dados$CODMUNRES,11,17) ~ "NORTE"
+)
+dados$REGIAO    = as.factor(dados$REGIAO)
+dados$TIPOBITO  = as.factor(dados$TIPOBITO)
+dados$LOCOCOR   = as.factor(dados$LOCOCOR)
+dados$ESCMAE    = as.factor(dados$ESCMAE)
+dados$SEXO      = as.factor(dados$SEXO)
+dados$GRAVIDEZ  = as.factor(dados$GRAVIDEZ)
+dados$GESTACAO  = as.factor(dados$GESTACAO)
+dados$PARTO     = as.factor(dados$PARTO)
+dados$OBITOPARTO  = as.factor(dados$OBITOPARTO)
+dados$ASSISTMED  = as.factor(dados$ASSISTMED)
+dados$IDADEMAE   = as.numeric(dados$IDADEMAE)
+dados$PESO       = as.numeric(dados$PESO)
+dados$QTDFILVIVO = as.numeric(dados$QTDFILVIVO)
+dados$QTDFILMORT = as.numeric(dados$QTDFILMORT)
+
+#Transformação CAUSABAS
+dados$CAUSABAS1<-str_sub(dados$CAUSABAS, end = 1)
+dados$CAUSABAS2<-str_sub(dados$CAUSABAS, end = 2)
+table(dados$CAUSABAS1)
+table(dados$CAUSABAS2)
+
+dados$CAUSABAS <-  ifelse(dados$CAUSABAS1 == "A" | dados$CAUSABAS1 =="B", "A00 - B99",
+                   ifelse(dados$CAUSABAS1 == "C" | dados$CAUSABAS2 =="D0"| dados$CAUSABAS2 =="D1"| dados$CAUSABAS2 =="D1"| dados$CAUSABAS2 =="D3"| dados$CAUSABAS2 =="D4", "C00 - D48",
+                   ifelse(dados$CAUSABAS2 == "D5" | dados$CAUSABAS2 =="D6"| dados$CAUSABAS2 =="D7"| dados$CAUSABAS2 =="D8", "D50 - D89",
+                   ifelse(dados$CAUSABAS1 == "E", "E00 - E90",
+                   ifelse(dados$CAUSABAS1 == "F", "F00 - F99",
+                   ifelse(dados$CAUSABAS1 == "G", "G00 - G99",
+                   ifelse(dados$CAUSABAS2 == "H0" | dados$CAUSABAS2 =="H1" | dados$CAUSABAS2 =="H2" | dados$CAUSABAS2 =="H3" | dados$CAUSABAS2 =="H4" | dados$CAUSABAS2 =="H5", "H00 - H59",
+                   ifelse(dados$CAUSABAS2 == "H6" | dados$CAUSABAS2 =="H7" | dados$CAUSABAS2 =="H8" | dados$CAUSABAS2 =="H9", "H60 - H95",
+                   ifelse(dados$CAUSABAS1 == "I", "I00 - I99",
+                   ifelse(dados$CAUSABAS1 == "J", "J00 - J99",
+                   ifelse(dados$CAUSABAS1 == "K", "K00 - K93",
+                   ifelse(dados$CAUSABAS1 == "L", "L00 - L99",
+                   ifelse(dados$CAUSABAS1 == "M", "M00 - M99",
+                   ifelse(dados$CAUSABAS1 == "N", "N00 - N99",
+                   ifelse(dados$CAUSABAS1 == "O", "O00 - O99",
+                   ifelse(dados$CAUSABAS1 == "P", "P00 - P96",
+                   ifelse(dados$CAUSABAS1 == "Q", "Q00 - Q99",
+                   ifelse(dados$CAUSABAS1 == "R", "R00 - R99",
+                   ifelse(dados$CAUSABAS1 == "S" | dados$CAUSABAS1 =="T", "S00 - T98",
+                   ifelse(dados$CAUSABAS1 == "V" | dados$CAUSABAS1 =="Y", "V01 - Y98",
+                   ifelse(dados$CAUSABAS1 == "Z", "Z00 - Z99",
+                   ifelse(dados$CAUSABAS1 == "U", "U04 - U99",NA))))))))))))))))))))))
+
+#Remover as 2 colunas novas para manter apenas CAUSABAS
+dados<-dados[,-c(2,13,18,19)] #CODMUN, CAUSABAS1, CAUSABAS2
+
+
+#Remoção de linhas com mais de 6 NA
+dados = dados %>% 
+  mutate(numNA = rowSums(is.na(dados)))
+dados<-subset(dados,numNA<=5)   #TIRAR LINHAS COM MAIS DE 6 NA
+
+#Estudando a idade das mães
+dados$REMOVE <-  ifelse(dados$IDADEMAE < 30 & dados$QTDFILVIVO > 20 |  dados$QTDFILMORT > 20, 1,
+                 ifelse(dados$IDADEMAE < 11 & dados$QTDFILVIVO > 3, 1,   
+                 ifelse(dados$IDADEMAE < 20 & dados$QTDFILVIVO >= 6 |  dados$QTDFILMORT >= 6, 1,0)))
+dados<-subset(dados,REMOVE < 1) #Removendo casos absurdos
+
+dados<-dados[,-c(16,17)]  #remoção da nova variavel
+#BASE FINAL. FALTA APENAS O MISSING
+
+#Verificação de NA
+a = sum(is.na(dados$REGIAO))/nrow(dados)
+b = sum(is.na(dados$SEXO))/nrow(dados)
+c = sum(is.na(dados$LOCOCOR))/nrow(dados)
+d = sum(is.na(dados$CAUSABAS))/nrow(dados)
+e = sum(is.na(dados$QTDFILVIVO))/nrow(dados)
+f = sum(is.na(dados$QTDFILMORT))/nrow(dados)
+g = sum(is.na(dados$GRAVIDEZ))/nrow(dados)
+h = sum(is.na(dados$GESTACAO))/nrow(dados)
+i = sum(is.na(dados$PARTO))/nrow(dados)
+j = sum(is.na(dados$ASSISTMED))/nrow(dados)
+k = sum(is.na(dados$OBITOPARTO))/nrow(dados)
+l = sum(is.na(dados$ESCMAE))/nrow(dados)
+m = sum(is.na(dados$IDADEMAE))/nrow(dados)
+n = sum(is.na(dados$PESOC))/nrow(dados)
+
+var_NA_dados = c(a,b,c,d,e,f,g,h,i,j,k,l,m,n)
+var_NA_dados
+
+#Leitura dos dados finals
+dados<-read.csv('C:/Users/Matheus/Desktop/Dados_Modelar.csv', sep = ",")
+dados$PESOC <-  ifelse(dados$PESO < 1000, "EB",
+                ifelse(dados$PESO >= 1000 &  dados$PESO <= 1499, "MB",
+                ifelse(dados$PESO >= 1500 & dados$PESO <= 2499, "B",
+                ifelse(dados$PESO >= 2500 & dados$PESO <= 2999, "I",
+                ifelse(dados$PESO >= 3000 & dados$PESO <= 3999, "N",
+                ifelse(dados$PESO > 3999, "E", NA))))))
+
+dados$IDADEMAE_CAT = ifelse(dados$IDADEMAE < 16, "16menos",
+                     ifelse(dados$IDADEMAE >= 16 &  dados$IDADEMAE <= 21, "16_a_21",
+                     ifelse(dados$IDADEMAE >= 22 & dados$IDADEMAE <= 35, "22_a_35",
+                     ifelse(dados$IDADEMAE >= 36 & dados$IDADEMAE <= 45, "36_a_45",
+                     ifelse(dados$IDADEMAE > 45, "46mais", NA)))))
+
+dados$REGIAO    = as.factor(dados$REGIAO)
+dados$TIPOBITO  = as.factor(dados$TIPOBITO)
+dados$LOCOCOR   = as.factor(dados$LOCOCOR)
+dados$ESCMAE    = as.factor(dados$ESCMAE)
+dados$SEXO      = as.factor(dados$SEXO)
+dados$GRAVIDEZ  = as.factor(dados$GRAVIDEZ)
+dados$GESTACAO  = as.factor(dados$GESTACAO)
+dados$PARTO     = as.factor(dados$PARTO)
+dados$OBITOPARTO  = as.factor(dados$OBITOPARTO)
+dados$ASSISTMED  = as.factor(dados$ASSISTMED)
+dados$IDADEMAE   = as.numeric(dados$IDADEMAE)
+dados$IDADEMAE_CAT   = as.factor(dados$IDADEMAE_CAT)
+dados$PESOC       = as.factor(dados$PESOC)
+dados$PESO       = as.numeric(dados$PESO)
+dados$QTDFILVIVO = as.numeric(dados$QTDFILVIVO)
+dados$QTDFILMORT = as.numeric(dados$QTDFILMORT)
+
+table(dados$LOCOCOR)
+table(dados$ESCMAE)
+table(dados$SEXO)
+table(dados$GRAVIDEZ)
+table(dados$PARTO)
+table(dados$OBITOPARTO)
+table(dados$ASSISTMED)
+
+
+#####
+### Análise Regional ###
+
+ggplot(dados, aes(x = IDADEMAE, fill = as.factor(TIPOBITO))) +
+      geom_histogram(binwidth = 2, bins = 50,position="identity", color = 'white', alpha = 0.5)   +
+      ggtitle("Relação entre Região e Idade da Mãe") + theme(plot.title = element_text(hjust = 0.5)) + 
+      xlab("Idade da Mãe") + ylab("Quantidade") + labs(fill = "Tipo de Óbito") +
+      theme_bw()+ scale_fill_manual(values=c("#FF0000", "#6666FF")) +
+      facet_wrap(~REGIAO) +
+      scale_y_continuous(expand = c(0,0))
+
+ggplot(dados, aes(x = ESCMAE)) +
+  geom_bar(color = 'white',fill = "#FF3333")   +
+  ggtitle("Relação entre Região e Esolaridade da Mãe") + theme(plot.title = element_text(hjust = 0.5)) + 
+  xlab("Escolaridade da Mãe") + ylab("Quantidade") +
+  facet_wrap(~REGIAO) + theme_bw()+
+  scale_y_continuous(expand = c(0,0))
+
+ggplot(dados, aes(x = LOCOCOR)) +
+  geom_bar(color = 'white',fill = "#FF3333")   +
+  ggtitle("Relação entre Região e Local do Ocorrido") + theme(plot.title = element_text(hjust = 0.5)) + 
+  xlab("Local do Ocorrido") + ylab("Quantidade") +
+  facet_wrap(~REGIAO) + theme_bw()+
+  scale_y_continuous(expand = c(0,0))
+
+ggplot(dados, aes(x = IDADEMAE_CAT)) +
+  geom_bar(color = 'white',fill = "#FF3333")   +
+  ggtitle("Relação entre Região e Idade da Mãe") + theme(plot.title = element_text(hjust = 0.5)) + 
+  xlab("Idade da Mãe") + ylab("Quantidade") +
+  facet_wrap(~REGIAO) + theme_bw()+
+  scale_y_continuous(expand = c(0,0))
+
+#Prosseguir para o modelo
+set.seed(1402)
+Meu código a partir do modelo (Victor): 
+
+# MODELAGEM DOS DADOS
+
+library(read.dbc)
+library(ggplot2)
+library(PerformanceAnalytics)
+library(corrplot)
+library(Hmisc)
+library(writexl)
+library(dplyr)
+library(mice)
+library(VIM)
+library(nnet)
+library(MASS)
+library(readr)
+library(caTools)
+library(leaps)
+library(pROC)
+library(fastDummies)
+library(caret)
+
+set.seed(1402)
+
+dados <- read.csv('C:/Users/Victor Mendes/Desktop/Dados_Modelar.csv', sep = ",",header = T)
+
+dados$PESOC <-  ifelse(dados$PESO < 1000, "EB",
+                       ifelse(dados$PESO >= 1000 &  dados$PESO <= 1499, "MB",
+                              ifelse(dados$PESO >= 1500 & dados$PESO <= 2499, "B",
+                                     ifelse(dados$PESO >= 2500 & dados$PESO <= 2999, "I",
+                                            ifelse(dados$PESO >= 3000 & dados$PESO <= 3999, "N",
+                                                   ifelse(dados$PESO > 3999, "E", NA))))))
+
+dados$IDADEMAE_CAT = ifelse(dados$IDADEMAE < 16, "16menos",
+                            ifelse(dados$IDADEMAE >= 16 &  dados$IDADEMAE <= 21, "16_a_21",
+                                   ifelse(dados$IDADEMAE >= 22 & dados$IDADEMAE <= 35, "22_a_35",
+                                          ifelse(dados$IDADEMAE >= 36 & dados$IDADEMAE <= 45, "36_a_45",
+                                                 ifelse(dados$IDADEMAE > 45, "46mais", NA)))))
+
+
+attach(dados)
+
+dados$SEXO = as.character(dados$SEXO)
+dados$LOCOCOR = as.character(dados$LOCOCOR)
+dados$GRAVIDEZ = as.character(dados$GRAVIDEZ)
+dados$GESTACAO = as.character(dados$GESTACAO)
+dados$PARTO = as.character(dados$PARTO)
+dados$ASSISTMED = as.character(dados$ASSISTMED)
+
+dados = dados[, c('TIPOBITO','LOCOCOR','ESCMAE','SEXO','QTDFILVIVO','QTDFILMORT','GRAVIDEZ','GESTACAO',
+                  'PARTO','ASSISTMED','CAUSABAS','REGIAO','PESOC','IDADEMAE_CAT')]
+
+dados = dummy_cols(dados,select_columns = c('SEXO','LOCOCOR','GRAVIDEZ','GESTACAO',
+                                            'PARTO','ASSISTMED','IDADEMAE_CAT','PESOC','CAUSABAS','REGIAO'),
+                   remove_first_dummy = TRUE,remove_selected_columns = TRUE)
+
+split = sample.split(dados$TIPOBITO, SplitRatio = 0.8)
+
+train = subset(dados, split == TRUE)
+test  = subset(dados, split == FALSE)
+
+
+## MODELAGEM
+
+#model = glm(TIPOBITO ~., data = train, family = binomial)
+
+#step_model = stepAIC(model, direction = 'both', trace = F, data = train)
+
+modelo = glm(TIPOBITO ~ ESCMAE+QTDFILVIVO+QTDFILMORT+SEXO_2+LOCOCOR_4+GRAVIDEZ_2+GRAVIDEZ_3+GESTACAO_2+
+                        GESTACAO_3+GESTACAO_4+GESTACAO_5+PARTO_2+ASSISTMED_2+IDADEMAE_CAT_16menos+
+                        IDADEMAE_CAT_22_a_35+IDADEMAE_CAT_36_a_45+IDADEMAE_CAT_46mais+
+                        PESOC_E+PESOC_EB+PESOC_I+PESOC_MB+PESOC_N+
+                        `CAUSABAS_P00 - P96`+`CAUSABAS_Q00 - Q99`+REGIAO_NORD+REGIAO_NORTE,
+                        data = train, family = binomial)
+
+
+## PONTO DE CORTE PARA VARIAVEL DEPENDENTE
+
+par(pty = 's')
+roc(train$TIPOBITO, modelo$fitted.values, plot = TRUE, legacy.axes = TRUE, percent = TRUE, col = '#377eb8',
+    lwd = 3, xlab = "Porcentagem de Falso Positivo", ylab = "Porcentagem de Verdadeiro Positivo",
+    main = "Curva ROC")
+abline(h = 40, col = 'red', lwd = 2)
+abline(h = 60, col = 'red', lwd = 2)
+
+roc_info = roc(train$TIPOBITO, modelo$fitted.values, legacy.axes = TRUE)
+
+roc_df = data.frame(tpp = roc_info$sensitivities*100, fpp = ( 1 - roc_info$specificities)*100,
+                    thresholds = roc_info$thresholds)
+
+head(roc_df)
+tail(roc_df)
+
+roc_df[roc_df$tpp > 60 & roc_df$tpp < 80, ]
+
+pred = predict(modelo, type = 'response', newdata = test[, -1])
+
+## PONTO DE CORTE
+
+y_pred = ifelse(pred > 0.4678, 1, 0)
+
+## MATRIZ DE CONFUSÃO
+cm = table(test$TIPOBITO, y_pred)
+
+acuraccy = ( cm[1,1] + cm[2,2] )/ ( cm[1,1] + cm[1,2] + cm[2,1] + cm[2,2])
+acuraccy
+
+prec <- cm[2,2]/sum(cm[,2])
+prec
+recall <- cm[2,2]/sum(cm[2,])
+recall
+
+## F1 SCORE
+f1 = 2*(prec * recall)/(prec + recall)
+f1
+
+# K-fold Cross Validation
+
+folds = createFolds(dados$TIPOBITO, k = 10)
+
+VC = lapply(folds, function(x) {
+                                training_fold = dados[-x, ]
+                                test_fold     = dados[x, ]
+                                model        = glm(TIPOBITO ~ ESCMAE+QTDFILVIVO+QTDFILMORT+SEXO_2+LOCOCOR_4+GRAVIDEZ_2+GRAVIDEZ_3+GESTACAO_2+
+                                                      GESTACAO_3+GESTACAO_4+GESTACAO_5+PARTO_2+ASSISTMED_2+IDADEMAE_CAT_16menos+
+                                                      IDADEMAE_CAT_22_a_35+IDADEMAE_CAT_36_a_45+IDADEMAE_CAT_46mais+
+                                                      PESOC_E+PESOC_EB+PESOC_I+PESOC_MB+PESOC_N+
+                                                      `CAUSABAS_P00 - P96`+`CAUSABAS_Q00 - Q99`+REGIAO_NORD+REGIAO_NORTE,
+                                                      data = training_fold, family = binomial) 
+                                prediction = predict(modelo, type = 'response', newdata = test_fold[, -1])
+                                y_prediction = ifelse(prediction > 0.4678, 1, 0)
+                                conf_mat = table(test_fold$TIPOBITO, y_prediction)
+                                acuracia = (conf_mat[1,1] + conf_mat[2,2])/(conf_mat[1,1] + conf_mat[2,2] + conf_mat[1,2] + conf_mat[2,1])
+                                
+                                return(acuracia)
+                                } )
+
+vet = c(NULL)
+for (i in 1:length(VC)){
+    vet[i] = VC[[i]] 
+}
+
+# Média das acurácias
+
+mean(vet)
+
