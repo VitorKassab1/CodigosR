@@ -1,0 +1,325 @@
+dados <- c(8.521, 4.187, 2.516, 1.913, 8.780, 5.912,0.761, 12.037, 2.604, 1.689, 5.626, 3.601, 
+       1.041, 6.361, 7.829, 0.301, 5.068, 1.383, 1.781, 3.031, 1.934, 2.564,1.128, 0.864, 5.359, 1.385, 
+       8.514, 2.307, 12.578, 4.977,1.530, 2.029, 0.576, 8.105, 0.595, 1.503, 3.151, 0.445, 0.475, 
+       8.628)
+media = mean(dados)
+media
+lambda = 1/media
+lambda
+
+rexpon <- function(n, lamb)
+{
+  u <- runif(n, 0, 1) 
+  x <- -log(u) / lamb 
+  return(x) 
+}
+set.seed(181256576)
+(exp = rexpon(40,lambda))
+
+mu = mean(exp)
+mu
+
+m = 1000
+valores = matrix(0,m,1)
+set.seed(181256576)
+for(i in 1:m){
+  y<-rexpon(40,lambda)
+  mu<- mean(y)
+  med <- mu
+  valores[i] <- med
+}
+valores
+
+ord = sort(valores) 
+ord
+
+quantile(valores,c(0.025,0.975)) 
+
+n = 10000
+val <- matrix(0,n,1)
+set.seed(181256576)
+for(i in 1:n){
+  y2<-rexpon(40,lambda)
+  mu1<- mean(y2)
+  med1 <- mu1
+  val[i] <- med1
+}
+val
+
+ord1 = sort(val)
+ord1
+
+quantile(val,c(0.025,0.975))
+
+set.seed(181256576)
+Int = function(n,i,s){
+  f = function(x){(x^3 - 6*x^2 + 9*x + 1)}
+  x = f(abs(runif(n,i,s)))
+  It = (s-i)*mean(x)
+  return(It)
+}
+
+set.seed(181256576)
+Int(50,0.5,4) 
+Int(100,0.5,4) 
+Int(500,0.5,4) 
+Int(1000,0.5,4) 
+
+n1 = c(50,100,500,1000)
+
+m=length(n1)
+val1 = matrix(0,ncol = m,nrow=100)
+set.seed(181256576)
+for(i in 1:m){
+  k = NULL
+  for(j in 1:100){
+    k=c(k,Int(n1[i],0,1))
+  }
+  val1[,i] = k
+}
+
+boxplot(data.frame(val1),names = n1,main="Boxplot do MMC de N=100", 
+        col = c("red","blue","yellow", "green"))
+
+set.seed(181256576)
+Int2 = function(n,i,s){
+  f = function(x){(x*sqrt(1+x))}
+  x = f(abs(runif(n,i,s)))
+  It = (s-i)*mean(x)
+  return(It)
+}
+
+set.seed(181256576)
+Int2(50,0,3) 
+Int2(100,0,3)
+Int2(500,0,3)
+Int2(1000,0,3)
+
+m<-length(n1)
+v1 <- matrix(0,ncol = m,nrow=100)
+set.seed(181256576)
+for(i in 1:m){
+  k = NULL
+  for(j in 1:100){
+    k<-c(k,Int2(n1[i],0,1))
+  }
+  v1[,i] <- k
+}
+boxplot(data.frame(v1),names = n1,main="Boxplot do MMC com
+N=100", col = c("red","blue","yellow", "green"))
+
+circulo<- function(N,n,ax,bx,ay,by,k,h,r){
+  circ<-matrix(0,ncol=1,nrow=N)
+  for(i in 1:N){
+    x<-runif(n,ax,bx) 
+    y<-runif(n,ay,by)
+    m<-0
+    for(j in 1:n){
+      cir<-((x[j]-k)^2+(y[j]-h)^2)
+      if(cir<(r^2))
+        m<-m+1
+    }
+    circ[i]<-((2*r)^2)*(m/n) 
+  }
+  return(circ)
+}
+N=200
+n=10
+circ<-circulo(N,n,-7,11,-6,12,2 ,3,9)
+areamedia<-mean(circ)
+areamedia
+
+areadp<-sd(circ)
+areadp
+
+alfa<-0.05
+liminf <- areamedia - (areadp/sqrt(N)*qt(1-alfa/2,N-1))
+limsup <- areamedia + (areadp/sqrt(N)*qt(1-alfa/2,N-1))
+liminf
+limsup
+
+boxplot(circ,main="boxplot N=200 e n=10")
+
+elipse<- function(N,n,ax,bx,ay,by,k,h,r,a,b){
+  elip<-matrix(0,ncol=1,nrow=N)
+  for(i in 1:N){
+    x<-runif(n,ax,bx)
+    y<-runif(n,ay,by) 
+    
+    for(j in 1:n){
+      pontos <- ifelse(((x-2)^2/(a^2))+((y-3)^2/(b^2)) <= 1,TRUE,FALSE)
+      elipse1 <- length(which(pontos == TRUE))
+      
+      
+    }
+    
+    elip[i]<-(2*a*2*b)*(elipse1/n) 
+  }
+  return(elip)
+}
+N<-200
+n=10
+eli<-elipse(N,n,-7,11,2,4,2 ,3,9,9,1)
+mediaarea<-mean(eli)
+dparea<-sd(eli) 
+alfa<-0.05
+liminf1 <- mediaarea - (dparea/sqrt(N)*qt(1-alfa/2,N-1))
+limsup1 <- mediaarea + (dparea/sqrt(N)*qt(1-alfa/2,N-1))
+liminf1
+limsup1
+
+boxplot(eli,main="boxplot N=200 e n=10")
+
+set.seed(181256576)
+funcao <- function(x){((2/(gamma(1)))*exp(-2*x))}
+f2 <- function(f,n,a,b){
+  x <- runif(n,a,b)
+  It <- mean(f(x))*(b-a)
+  return(It)
+}
+
+set.seed(181256576)
+f2(funcao, 10,0,10);f2(funcao, 10,0,100);f2(funcao, 10,0,1000)
+f2(funcao, 100,0,10);f2(funcao, 100,0,100);f2(funcao, 100,0,1000)
+f2(funcao, 200,0,10);f2(funcao, 200,0,100);f2(funcao, 200,0,1000)
+f2(funcao, 1000,0,10);f2(funcao, 1000,0,100);f2(funcao, 1000,0,1000)
+
+set.seed(181256576)
+funcao2 <- function(x){((1/4)*x*exp(-x/2))}
+f3 <- function(f,n,a,b){
+  x <- runif(n,a,b)
+  It <- mean(f(x))*(b-a)
+  return(It)
+}
+
+set.seed(181256576)
+
+f3(funcao2, 10,0,10);f3(funcao2, 10,0,100);f3(funcao2, 10,0,1000)
+f3(funcao2, 100,0,10);f3(funcao2, 100,0,100);f3(funcao2, 100,0,1000)
+f3(funcao2, 200,0,10);f3(funcao2, 200,0,100);f3(funcao2, 200,0,1000)
+f3(funcao2, 1000,0,10);f3(funcao2, 1000,0,100);f3(funcao2, 1000,0,1000)
+
+set.seed(181256576)
+funcao3 <- function(x){(1/sqrt(2*3.141593))*exp(-((x-2)^2)/2)}
+f4 <- function(f,n,a,b){
+  x <- runif(n,a,b)
+  It <- mean(f(x))*(b-a)
+  return(It)
+}
+
+set.seed(181256576)
+
+f4(funcao3, 10,0,10);f4(funcao3, 10,0,100);f4(funcao3, 10,0,1000)
+f4(funcao3, 100,0,10);f4(funcao3, 100,0,100);f4(funcao3, 100,0,1000)
+f4(funcao3, 200,0,10);f4(funcao3, 200,0,100);f4(funcao3, 200,0,1000)
+f4(funcao3, 1000,0,10);f4(funcao3, 1000,0,100);f4(funcao3, 1000,0,1000)
+set.seed(201251728)
+
+funcao4 <- function(x){((gamma(7/2)/(gamma(6/2)*sqrt(6*3.141593))*(1 + (x^2)/6)^-7/2))}
+f5 <- function(f,n,a,b){
+  x <- runif(n,a,b)
+  It <- mean(f(x))*(b-a)
+  return(It)
+}
+
+set.seed(181256576)
+
+f5(funcao4, 10,0,10);f5(funcao4, 10,0,100);f5(funcao4, 10,0,1000)
+f5(funcao4, 100,0,10);f5(funcao4, 100,0,100);f5(funcao4, 100,0,1000)
+f5(funcao4, 200,0,10);f5(funcao4, 200,0,100);f5(funcao4, 200,0,1000)
+f5(funcao4, 1000,0,10);f5(funcao4, 1000,0,100);f5(funcao4, 1000,0,1000)
+
+library(MASS)
+C1 = matrix(c(1,0.35,0.35,1),2,2)
+C2 = matrix(c(1,-0.95,-0.95,1),2,2)
+#Definindo os parâmetros
+mu = c(0,0)
+n100 = 100
+n1000 = 1000
+z1 = mvrnorm(n100,mu,C1) #para n=100 e correlação 0,35
+z2 = mvrnorm(n1000,mu,C1) #para n=1000 e correlação 0,35
+z3 = mvrnorm(n100,mu,C2) #para n=100 e correlação -0,95
+z4 = mvrnorm(n1000,mu,C2) #para n=1000 e correlação -0,95
+x1 = c(z1[,1])
+y1 = c(z1[,2])
+x2 = c(z2[,1])
+y2 = c(z2[,2])
+x3 = c(z3[,1])
+y3 = c(z3[,2])
+x4 = c(z4[,1])
+y4 = c(z4[,2])
+
+par(mfrow = c(2,2))
+plot(x1,y1,main="Gráfico de dispersão para n = 100 e p = 0.35", xlab = "", ylab = "",col=ifelse((y1<2 & y1>-1), "green","magenta"),pch=20)
+grid()
+
+plot(x2,y2,main="Gráfico de dispersão para n = 1000 e p = 0.35", xlab = "", ylab = "",
+     col=ifelse((y2<2 & y2>-2), "green","magenta"),pch=20)
+grid()
+
+plot(x3,y3,main="Gráfico de dispersão para n = 100 e p = -0.95", xlab = "", ylab = "",col=ifelse((y3<2 & y3>-1), "green","magenta"),pch=20)
+grid()
+
+plot(x4,y4,main="Gráfico de dispersão para n = 100 e p = -0.95", xlab = "", ylab = "",col=ifelse((y4<2 & y4>-1), "green","magenta"),pch=20)
+grid()
+
+
+va1 <- y1[y1<2 & y1>-2]
+va2 <- y2[y2<2 & y2>-2]
+va3 <- y3[y3<2 & y3>-2]
+va4 <- y4[y4<2 & y4>-2]
+
+(Prob1 <- length(va1)/n100)
+(prob2 <- length(va2)/n1000)
+(prob3 <- length(va3)/n100) 
+(prob4 <- length(va4)/n1000)
+
+
+par(mfrow = c(2,2))
+plot(x1,y1,main="Gráfico de dispersão para n = 100 e p = 0.35", xlab = "", ylab = "",
+     col=ifelse((x1<1 & y1< -1), "green","magenta"),pch=20)
+abline(h = 1,col = "blue",lwd = 3);grid()
+plot(x2,y2,main="Gráfico de dispersão para n = 1000 e p = 0.35", xlab = "", ylab = "",
+     col=ifelse((x2<1 & y2< -1), "green","magenta"),pch=20)
+abline(h = 1,col = "blue",lwd = 3);grid()
+plot(x3,y3,main="Gráfico de dispersão para n = 100 e p = -0.95", xlab = "", ylab = "",
+     col=ifelse((x3<1 & y3< -1), "green","magenta"),pch=20)
+abline(h = 1,col = "blue",lwd = 3);grid()
+plot(x4,y4,main="Gráfico de dispersão para n = 100 e p = -0.95", xlab = "", ylab = "",
+     col=ifelse((x4<1 & y4< -1), "green","magenta"),pch=20)
+abline(h = 1,col = "blue",lwd = 3);grid()
+
+va.b1 <- x1[x1<1 & y1< -1]
+va.b2<- x2[x2<1 & y2< -1]
+va.b3 <- x3[x3<1 & y3< -1]
+va.b4 <- x4[x4<1 & y4< -1]
+va.bb1 <- y1[y1< -1]
+va.bb2 <- y2[y2< -1]
+va.bb3 <- y3[y3< -1]
+va.bb4 <- y4[y4< -1]
+(proba1 <- length(va.b1)/length(va.bb1)) 
+(proba2 <- length(va.b2)/length(va.bb2)) 
+(proba3 <- length(va.b3)/length(va.bb3))
+(proba4 <- length(va.b4)/length(va.bb4))
+
+par(mfrow = c(2,2))
+plot(x1,y1,main="Gráfico de dispersão para n = 100 e p = 0.35", xlab = "", ylab = "",
+     col=ifelse((y1<3 & y1>0), "green","magenta"),pch=20)
+grid()
+plot(x2,y2,main="Gráfico de dispersão para n = 1000 e p = 0.35", xlab = "", ylab = "",
+     col=ifelse((y2<3 & y2>0), "green","magenta"),pch=20)
+grid()
+plot(x3,y3,main="Gráfico de dispersão para n = 100 e p = -0.95", xlab = "", ylab = "",
+     col=ifelse((y3<3 & y3>0), "green","magenta"),pch=20)
+grid()
+plot(x4,y4,main="Gráfico de dispersão para n = 100 e p = -0.95", xlab = "", ylab = "",
+     col=ifelse((y4<3 & y4>0), "green","magenta"),pch=20)
+grid()
+va1 <- y1[y1<3 & y1>0]
+va2 <- y2[y2<3 & y2>0]
+va3 <- y3[y3<3 & y3>0]
+va4 <- y4[y4<3 & y4>0]
+(Probab1 <- length(va1)/n100) 
+(probab2 <- length(va2)/n1000)
+(probab3 <- length(va3)/n100) 
+(probab4 <- length(va4)/n1000)
