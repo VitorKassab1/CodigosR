@@ -1,0 +1,122 @@
+help(dgamma)
+
+#gerar numero de interacoes
+R<-10000
+
+# tamanho/dimensão dos parametros
+alfa<-length(R+1)
+beta<-length(R+1)
+
+x<-c(0.90,2.34,10.83,0.08,0.01,0.04,0.10,0.26,2.09,0.01,0.04,1.88
+     ,0.74,0.45,0.52,1.30,0.33,0.63,1.14,1.40,0.26,0.97,0.16,0.45
+     ,0.14,0.04,1.27,0.31,0.36,0.88,0.78,0.08,0.08,1.22,0.75,0.24
+     ,0.41,0.61,1.86,0.56,0.43,0.12,0.35,0.34,0.82,0.07,1.87,0.06
+     ,0.17,1.73)
+
+n<-length(x)
+ni<-0.1
+ni2<-0.5
+
+#valores iniciais
+alfa[1]<-0.1
+beta[1]<-0.1
+
+#distribuicao a posteriori
+posterior <- function (a,b)
+{
+  logL= n*log(a) - n*log(b) - (1+a)*sum(x+1/b)
+  
+  likeh<-exp(logL)
+  
+  prior <- dgamma(a,0.1,0.1)*dgamma(b,0.1,0.1)
+  
+  posterior=likeh*prior
+  
+  return(posterior)
+}
+
+#contadores de numeros reijeitados na "formacao" dos 2 parametros
+t<-rep(0,times=R)
+j<-rep(0,times=R)
+k<-rep(0,times=R)
+
+
+#aplicando algoritimo M-H
+for (i in 1:R) {
+  prop1<-rgamma(1,shape=alfa[i]/ni,scale =ni)
+  aux1<-posterior(prop1,beta[i])/posterior(alfa[i],beta[i])
+  num1<-dgamma(alfa[i],shape=prop1/ni,scale=ni)
+  den1<-dgamma(prop1,shape=alfa[i]/ni,scale=ni)
+  h1<-num1/den1
+  ratio1<-h1*aux1
+  alpha1<-min(1,ratio1)
+  u1<-runif(1)
+  
+  if (u1 < alpha1) {alfa[i+1]<-prop1} else {alfa[i+1]<-alfa[i]
+  t[i]<-1}
+  
+  
+  prop2<-rgamma(1,shape=beta[i]/ni2,scale=ni2)
+  aux2<-posterior(alfa[i+1],prop2)/posterior(alfa[i+1],beta[i])
+  num2<-dgamma(beta[i],shape=prop2/ni2,scale=ni2)
+  den2<-dgamma(prop2,shape=beta[i]/ni2,scale=ni2)
+  h2<-num2/den2
+  ratio2<-h2*aux2
+  alpha2<-min(1,ratio2)
+  u2<-runif(1)
+  
+  if (u2 < alpha2) {beta[i+1]<-prop2} else {beta[i+1]<-beta[i]
+  j[i]<-1}
+}
+
+# Taxa de aceitação para alpha
+1-sum(t)/i
+# Taxa de aceitação para beta
+1-sum(j)/i
+
+#gráficos acf e ts.plot  
+par(mfrow=c(2,2))
+par(mai=c(0.77,0.77,0.0, 0.07))
+ts.plot(alfa,ylab=expression(alpha))
+par(mai=c(0.77,0.77,0.45, 0.07))
+acf(alfa,main=expression(alpha),lag=30)
+par(mai=c(0.77,0.77,0.0, 0.07))
+ts.plot(beta,ylab=expression(beta))
+par(mai=c(0.77,0.77,0.45, 0.07))
+acf(beta,main=expression(beta))
+
+#estimador e desvio padrao
+mean(alfa)
+sd(alfa)
+mean(beta)
+sd(beta)
+
+resultado1=c(mean(alfa),var(alfa),mean(beta),var(beta))
+resultado1
+
+#intervalos de credibilidade
+ai=quantile(alfa, probs = 0.025, na.rm = FALSE,names = TRUE,type = 7)
+as=quantile(alfa, probs = 0.975, na.rm = FALSE,names = TRUE,type = 7)
+bi=quantile(beta, probs = 0.025, na.rm = FALSE,names = TRUE,type = 7)
+bs=quantile(beta, probs = 0.975, na.rm = FALSE,names = TRUE,type = 7)
+ai
+as
+bi
+bs
+c(mean(alfa),sd(alfa),ai,as)
+c(mean(beta),sd(beta),bi,bs)
+
+
+#graficos da posteriori
+d<-density(alfa)
+plot(d,main="densidade de alfa")
+c<-density(beta)
+plot(c,main="densidade de lambda")
+
+#histograma e curva
+ma=mean(alfa)
+mb=mean(beta)
+d=function(x)((mb/ma)*(x/ma)^(mb-1))/((1+(x/ma)^mb)^2)
+hist(x, prob = TRUE,ylim=c(0,2),ylab = "Densidade",xlab = "X",main = "")
+lines(density(x),col=1,lwd =2)
+curve(d,add=TRUE,col=4,lwd=2)
