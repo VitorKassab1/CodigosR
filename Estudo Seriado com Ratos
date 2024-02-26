@@ -1,0 +1,42 @@
+canc4a.dat = scan(what=list(obs=0,rd=0))
+6 2597 13 3105 8 2786
+12 1613 3 411 1 232
+#caquexia e o tempo de observacao ja agrupados
+
+#Agora inserimos Grupo de passagem e presenca de MASSa tumoral
+library(DoE.base)
+rato.design=fac.design(nfactors=2, factor.names=list(gp=c("P0-P6","P7-P18","P19-P28"),mt=c("sim","nao")),replications = 1,randomize = FALSE)
+rato.design
+attach(canc4a.dat)
+rato.df = data.frame(obs,rd,rato.design)
+#Geramos o data frame
+rato.df
+
+attach(rato.df)
+gp = C(gp,treatment)
+mt = C(mt,treatment)
+
+
+#Modelo de Poisson  logLambdaij = alpha + Betai + Gamaj
+
+#offset para modelo log-linear
+logt0 = log(rd)
+#Modelo com parte sistematica  log uij = log tij +alpha + Betai + Gamaj
+canc4a.fit = glm( obs ~ gp + mt + offset(logt0),family=poisson)
+summary(canc4a.fit)
+
+
+#Modelo Sem os grupos
+canc4r.fit = glm( obs ~ mt + offset(logt0),family=poisson)
+summary(canc4r.fit)
+
+#Teste Razao Verossimilhança
+canc4r.fit$deviance-canc4a.fit$deviance
+#Graus de liberdade
+canc4r.fit$df.residual-canc4a.fit$df.residual
+
+
+#termo logtij como covariavel
+# log uij = delta*log tij +alpha + Betai + Gamaj
+canc4l.fit = glm( obs ~ gp + mt + logt0,family=poisson)
+summary(canc4l.fit)
