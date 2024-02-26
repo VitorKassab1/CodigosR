@@ -1,0 +1,141 @@
+df<-read.csv("C:/Users/Larissa/Documents/Contacts/Downloads/NetflixOriginals.csv"
+)
+titulo=df[,1]
+genero=df[,2]
+datas=df[,3]
+duracao=df[,4]
+notasIMBD=df[,5]
+idioma=df[,6]
+gen2=summary(factor(genero))
+
+barplot(gen2[2:n])
+summary(gen2[2:n])
+pie(gen2[2:n])
+prop.table(gen2[10:n])
+aptidao<-ifelse(notasIMBD>=8,"apto","inapto")
+table(genero,aptidao)
+#observe que documentario tem notas maiores que 8
+#17 maiores que 8 onde 13 sao documentarios
+summary(notasIMBD)
+stem(notasIMBD)
+#maioria das notas entre 5 e 7
+aptidao<-ifelse(notasIMBD<4.5,"apto","inapto")
+table(genero,aptidao)
+apt4=summary(factor(aptidao))
+apt4
+#conclusao;;25 são menos que 4.5 onde
+#4 terror 4 comedia 4 documentario
+hist(duracao,nclass=20)
+#maioria entre 90min e 120min
+
+##Código do programa parte 2##
+
+library(treemapify)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(ggwaffle)
+df<-read.csv("C:/Users/zetem/Documents/Trabalho Final- Computação
+Aplicada/NetflixOriginals.csv")
+
+titulo=df[,1]
+genero=df[,2]
+datas=df[,3]
+duracao=df[,4]
+notasIMBD=df[,5]
+idioma=df[,6]
+head(df)
+
+gen2=summary(factor(genero))
+gen2
+barplot(gen2[2:10])
+pie(gen2[2:10])
+summary(df)
+
+x<-table(df$Language)
+dim(df)
+y<-sort(x, decreasing = TRUE)
+tab<-sort(table(df$Genre),decreasing = TRUE)
+barplot(tab[0:10],xlab="Principais Gêneros",ylab="Frequência absoluta",col=cols <-
+c("blue", "white", "gray50", "Yellow", "gray90", "black",
+
+"green4", "red", "red4"))
+
+hist(df$IMDB.Score,xlab="Nota no
+IMDB",ylab="Frequência",col="blue",main="Histograma do Escore IMDB")
+boxplot(df$IMDB.Score,xlab="Boxplot das notas do IMDB")
+hist(df$Runtime,xlab="Duração dos
+Filmes",ylab="Frequência",col="red",main="Histograma da duração dos filmes")
+boxplot(df$Runtime,main="boxplot da duração dos filmes")
+df$Premiere
+dfimdb <- df %>% arrange(desc(IMDB.Score))
+melhoresproducoes<-dfimdb[0:10,]
+dfduração <- df %>% arrange(desc(Runtime))
+
+maioresduracoes<-dfduração[0:10,]
+melhoresproducoes
+maioresduracoes
+melhoresproducoes %>%
+arrange(IMDB.Score)%>%
+mutate(Title=factor(Title,levels=Title)) %>%
+ggplot(aes(x=Title, y=IMDB.Score)) +
+geom_point(color="orange", size=4) +
+geom_segment( aes(x=Title, xend=Title, y=0, yend=IMDB.Score),color="grey")+
+theme(axis.text.x = element_text(angle = 90))+
+labs(title="Top 10 produções por IMDB Score",
+x="", y = "IMDB Score")
+maioresduracoes %>%
+arrange(Runtime)%>%
+mutate(Title=factor(Title,levels=Title)) %>%
+ggplot(aes(x=Title, y=Runtime)) +
+geom_point(color="Red", size=4) +
+theme(axis.text.x = element_text(angle = 90))+
+labs(title="Top 10 produções por Duração",
+x="", y = "Duração em minutos")+
+coord_flip()+
+scale_y_continuous(limits = c(145, 215), breaks = seq(145, 215, by = 10))+
+theme(
+panel.grid.major.y = element_blank(),
+panel.border = element_blank(),
+axis.ticks.y = element_blank()
+)+
+theme_minimal()
+
+ggplot(df,aes(x=IMDB.Score,y=Runtime)) +
+geom_point(shape=18,color="red",size=3)+
+labs(title="IMDB Escore por duração do conteúdo",
+x="IMDB Escore", y = "Duração")+
+theme_classic()
+Idioma = summary(factor(idioma))
+Idioma
+
+df2 <- df
+df2 %>% mutate(Premiere = (as.character(str_sub(Premiere, start= -4))))
+head(df2 %>% mutate(Premiere = (as.character(str_sub(Premiere, start= -4)))))
+
+waffle_data <- waffle_iron((df2 %>% mutate(Premiere =
+(as.character(str_sub(Premiere, start= -4))))),aes_d(group=Premiere))
+ggplot(waffle_data, aes(x, y, fill = group)) +
+geom_waffle() +
+coord_equal() +
+theme_waffle() +
+labs(title = "Estréia de conteúdo por ano",
+subbtittle ="",
+x="",
+y="",fill="Ano")
+
+df3<-sort((summary(factor(idioma))),decreasing = TRUE)
+df3[0:10]
+
+Idiomas<-
+c("Inglês","Hindu","Espanhol","Francês","Italiano","Português","Indonésio","Japonês"
+,"Coreano","Inglês/Espanhol")
+valor<- c(401,33,31,20,14,12,9,6,6,5)
+df3<-data.frame(Idiomas,valor)
+df3
+ggplot(df3,aes(area=valor,fill=Idiomas,label=Idiomas))+
+geom_treemap()+
+geom_treemap_text(colour = "black",
+
+place = "centre",
+size = 15)
