@@ -1,0 +1,30 @@
+library(tseries)
+library(forecast)
+library(ggplot2)
+library(lmtest)
+alimento1 <- alimento$`INPC - alimentos e bebidas - taxa de variação - (% a.m.) - Instituto Brasileiro de Geografia e Estatística, Sistema Nacional de Índices de Preços ao Consumidor (IBGE/SNIPC) - PRECOS12_INPCAB12 -`
+adf.test(alimento1)
+ts.plot(alimento1)
+acf(alimento1,ylim = c (-1,1))
+pacf(alimento1)
+modelo_treino <- ts(alimento1[1:294])
+modelo_teste <- ts(alimento1[295:301])
+modelo<- auto.arima(alimento1,stationary = TRUE,stepwise = FALSE)
+modelo
+accuracy(modelo$fitted, modelo_treino)
+previsao <- forecast(modelo, h = 5)
+head(previsao$lower)
+head(previsao$upper)
+autoplot(previsao, predict.colour = "green") + labs(x = "Tempo", y = "Acidentes", title = "Previsao usando o forecast") 
+
+accuracy(modelo_teste, as.numeric(previsao$mean))
+
+residuals=modelo$residuals
+coeftest(modelo)
+
+ggplot(data=residuals,aes(residuals))+
+  geom_histogram(bins = 8, fill= '#ff9999')+
+  labs(x = "Resíduos", y = "Frequência")
+
+qqnorm(y = residuals,col="red",main="")
+qqline(y = residuals)
