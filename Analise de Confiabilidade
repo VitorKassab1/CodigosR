@@ -1,0 +1,62 @@
+ibrary(survival)
+library(fitdistrplus)
+library(flexsurv)
+library(stats)
+library(bbmle)
+library(maxLik)
+# Dados
+x <- c(7, 8, 10, 12, 13, 14, 19, 23, 25, 26, 27, 31, 31, 49, 59, 64, 87, 89, 107, 117, 119, 130, 148, 153, 156, 159, 191, 222, 200, 203, 210, 220,220, 228, 230, 233, 235, 240, 240, 240, 241, 245, 247, 248, 250)
+
+# Censura = 0 
+censura <- c(1,1,1,1,1,0,1,1,0,1,1,1,0,1,0,0,1,1,1,1,1,1,1,1,1, 1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+
+# Censurados a direita
+Surv(x,censura,type=c("right")) 
+
+# Verossimilhança
+r <- sum(censura)
+
+loglike <- function(vet){ 
+  lambda<- vet[1]
+  alpha<- vet[2]
+  d=r*log(alpha) + r*log(lambda) + (alpha - 1)*sum(censura*log(1-exp(-lambda*x)))- lambda*sum(censura*x) + sum((1-censura)*log(1-(1-exp(-lambda*x))^alpha))
+  return(-d)
+}
+
+EMV<-optim(par=c(1,1),fn=loglike)$par
+EMV
+
+
+Surv(x,censura,type=c("right"))
+plot((Surv(x,censura,type=c("right"))),ylab="S(t)",xlab="Tempos", main="Estimador de KaplanMeier",col=1,lwd=1)
+s <- function(x, alpha, lambda) 1 - (1-exp(-lambda*x))^alpha
+
+alpha <- 0.808039457
+lambda <- 0.002989444
+
+
+curve(s(x,alpha,lambda),add=T,col="purple")
+
+# Fisher
+FISHER <- optim(par=c(0.8080,0.002989),fn=logllike,method="SANN",hessian=TRUE)$hessian
+FISHER
+INVERSAFISHER<-solve(FISHER)
+dp=sqrt(diag(INVERSAFISHER))
+dp
+INVERSAFISHER
+
+# intervalo para alpha
+limite.inf.alpha<-EMV[2]-1.96*dp[2]
+limite.sup.alpha<-EMV[2]+1.96*dp[2]
+
+limite.inf.alpha
+limite.sup.alpha
+
+
+# intervalo para lambda
+limite.inf.lambda<-EMV[1]-1.96*dp[1]
+limite.sup.lambda<-EMV[1]+1.96*dp[1]
+
+limite.inf.lambda
+limite.sup.lambda
+
