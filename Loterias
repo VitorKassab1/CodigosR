@@ -1,0 +1,45 @@
+dados = data.frame(lotofacil_resultados_1_3054)
+dados1 <- as.numeric(unlist(dados[,-1]))
+hist(dados1, main = "histograma", xlab = "valores")
+
+freq <- table(dados1)
+top7 <- names(sort(freq, decreasing = TRUE))
+bot7 <- names(sort(freq, decreasing = FALSE))
+
+topsete <- sample(top7, size = 7)
+print(topsete)
+top15 <- sample(top7, size = 15)
+print(top15)
+botsete <- sample(bot7, size = 7)
+print(botsete)
+
+##############################################################################3
+milionarios = data.frame(mais_milionaria_resultados_1_130)
+milionarios1 <- as.numeric(unlist(milionarios[,2:7]))
+trevos <- as.numeric(unlist(milionarios[,8:9]))
+
+# Criando a tabela
+freq1 <- table(milionarios1)
+hist(milionarios1, main = "histograma", xlab = "valores")
+
+top3 <- names(sort(freq1, decreasing = TRUE))
+bot3 <- names(sort(freq1, decreasing = FALSE))
+
+
+toptres <- sample(top3, size = 3)
+print(toptres)
+topseis <- sample(top3, size = 6)
+print(topseis)
+bottres <- sample(bot3, size = 3)
+print(bottres)
+
+trev <- table(trevos)
+trev
+trev1 <- names(sort(trev, decreasing = TRUE))
+trev2 <- names(sort(trev, decreasing = FALSE))
+primeiro.trev <- sample(trev1, size = 1)
+print(primeiro.trev)
+doistrevos <- sample(trev1, size = 2)
+print(doistrevos)
+ultimotrevo <- sample(trev2, size = 1)
+print(ultimotrevo)
